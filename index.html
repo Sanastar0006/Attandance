@@ -1,61 +1,204 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Staff Attendance Login</title>
+  <meta charset="utf-8">
+  <title>Staff Attendance (Camera + GPS)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; background:#eef3ff; text-align:center; padding:40px; }
-    input { margin:6px; padding:8px; width:220px; border-radius:6px; border:1px solid #aaa; }
-    button { padding:8px 16px; border:none; border-radius:6px; background:#007bff; color:white; cursor:pointer; }
-    button:hover { background:#0056b3; }
+    body{font-family: Arial, sans-serif; padding:16px; background:#f4f7fb}
+    .card{background:white;padding:16px;border-radius:8px;max-width:760px;margin:0 auto;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+    input,button,select{padding:8px;border-radius:6px;border:1px solid #cfd8e3}
+    .row{display:flex;gap:8px;margin-bottom:8px}
+    video{width:320px;height:240px;background:#000}
+    canvas{display:none}
+    .small{font-size:13px;color:#555}
+    .green{background:#16a34a;color:white;border:none}
+    .orange{background:#f97316;color:white;border:none}
+    .red{background:#ef4444;color:white;border:none}
   </style>
 </head>
 <body>
-  <h2>👨‍💼 Staff Login</h2>
-  <input type="email" id="username" placeholder="Username (email)" /><br>
-  <input type="password" id="password" placeholder="Password" /><br>
-  <button onclick="login()">Login</button>
+  <div class="card">
+    <h2>Staff Attendance</h2>
+    <div id="loginBox">
+      <div class="row"><input id="username" placeholder="Username (email)" style="flex:1" /></div>
+      <div class="row"><input id="password" placeholder="Password" type="password" style="flex:1" /></div>
+      <div class="row">
+        <button id="loginBtn">Login</button>
+        <span id="loginMsg" class="small"></span>
+      </div>
+    </div>
 
-  <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby3lDig4qrf_aVu3y6uM2zPRpu0lcRCJ0E0LKuURUWBVE9l8PmK8kxQWab4zMGusYRo/exec"; // <-- replace with your Apps Script URL
+    <div id="attBox" style="display:none">
+      <div class="small">Logged in as <strong id="staffName"></strong> (<span id="staffUser"></span>)</div>
+      <div style="margin-top:8px" class="row">
+        <div>
+          <video id="video" autoplay playsinline></video>
+          <canvas id="canvas" width="320" height="240"></canvas>
+        </div>
+        <div style="flex:1">
+          <div class="small">Location: <span id="locText">detecting...</span></div>
+          <div class="small">Lat: <span id="lat"></span> Lng: <span id="lng"></span></div>
+          <div style="margin-top:8px" class="row">
+            <button id="presentBtn" class="green">Mark Present</button>
+            <button id="halfBtn" class="orange">Half-Day (Request)</button>
+            <button id="leaveBtn" class="red">Leave</button>
+          </div>
+          <div style="margin-top:8px">
+            <input id="note" placeholder="Note (optional)" style="width:100%" />
+          </div>
+          <div style="margin-top:8px" class="small">Status: <span id="statusMsg">—</span></div>
+        </div>
+      </div>
+      <div style="margin-top:8px" class="small">
+        <button id="logoutBtn">Logout</button>
+      </div>
+    </div>
+  </div>
 
-    function login() {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value.trim();
-      if (!username || !password) {
-        alert("Enter both username and password!");
-        return;
-      }
+<script>
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby3lDig4qrf_aVu3y6uM2zPRpu0lcRCJ0E0LKuURUWBVE9l8PmK8kxQWab4zMGusYRo/exec'; // <<-- replace
 
-      const data = {
-        action: "login",
-        payload: { username, password }
-      };
+let staff = null;
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
 
-      fetch(WEB_APP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      })
-      .then(res => res.json())
-      .then(result => {
-        console.log("Login response:", result);
-        if (result.ok) {
-          alert("✅ Welcome, " + result.staff.name);
-          // Save staff info locally and redirect to attendance page
-          localStorage.setItem("staffInfo", JSON.stringify(result.staff));
-          window.location.href = "attendance.html"; // your main attendance page
-        } else {
-          alert("❌ " + result.error);
-        }
-      })
-      .catch(err => {
-        console.error("Login fetch error:", err);
-        alert("⚠️ Network error");
-      });
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  if(!username || !password) { alert('Enter username & password'); return; }
+  setLoginMsg('Logging in...');
+  const res = await postJson({ action:'login', payload:{ username, password }});
+  if(res && res.ok){
+    staff = res.staff;
+    onLoginSuccess();
+  } else {
+    setLoginMsg('Login failed');
+    alert('Login failed: ' + (res && res.error ? res.error : 'unknown'));
+  }
+});
+
+function setLoginMsg(t){ document.getElementById('loginMsg').textContent = t; }
+
+function onLoginSuccess(){
+  document.getElementById('loginBox').style.display='none';
+  document.getElementById('attBox').style.display='block';
+  document.getElementById('staffName').textContent = staff.name;
+  document.getElementById('staffUser').textContent = staff.username;
+  startCamera();
+  detectLocation();
+  setLoginMsg('');
+  // optional: auto-check if after 10:00 mark absent? We'll not auto-post absent here for safety.
+}
+
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  staff = null;
+  stopCamera();
+  document.getElementById('attBox').style.display='none';
+  document.getElementById('loginBox').style.display='block';
+});
+
+async function capturePhotoBase64(){
+  // draw video frame to canvas and get dataURL
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const dataUrl = canvas.toDataURL('image/png');
+  return dataUrl;
+}
+
+document.getElementById('presentBtn').addEventListener('click', ()=> submitAttendance('Present'));
+document.getElementById('halfBtn').addEventListener('click', ()=> submitAttendance('Half-Day-Requested'));
+document.getElementById('leaveBtn').addEventListener('click', ()=> submitAttendance('Leave'));
+
+async function submitAttendance(status){
+  if(!staff) return alert('Not logged in');
+  setStatus('Capturing photo & location...');
+  const photoBase64 = await capturePhotoBase64();
+  const lat = window._lastLat || '';
+  const lng = window._lastLng || '';
+  const locText = window._lastLocText || '';
+  const note = document.getElementById('note').value || '';
+  const payload = {
+    username: staff.username,
+    staffName: staff.name,
+    staffId: staff.staffId || '',
+    status: status,
+    note: note,
+    lat: lat,
+    lng: lng,
+    locationText: locText,
+    photoBase64: photoBase64
+  };
+  setStatus('Sending to server...');
+  const res = await postJson({ action:'attendance', payload });
+  if(res && res.ok){
+    setStatus('Saved: ' + status);
+    if(status === 'Half-Day-Requested'){
+      alert('Half-Day request sent. Admin must approve in sheet.');
     }
-  </script>
+  } else {
+    setStatus('Error saving');
+    alert('Save failed: ' + (res && res.error ? res.error : 'unknown'));
+  }
+}
+
+function setStatus(t){ document.getElementById('statusMsg').textContent = t; }
+
+// ----- camera functions -----
+let stream = null;
+async function startCamera(){
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+    video.srcObject = stream;
+  } catch(err){
+    alert('Camera error: ' + err.message);
+  }
+}
+function stopCamera(){
+  if(stream){
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+}
+
+// ----- geolocation -----
+function detectLocation(){
+  if(!navigator.geolocation){ document.getElementById('locText').textContent = 'Not supported'; return; }
+  navigator.geolocation.getCurrentPosition((pos)=>{
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    document.getElementById('lat').textContent = lat;
+    document.getElementById('lng').textContent = lng;
+    const locText = `Lat ${lat.toFixed(5)}, Lng ${lng.toFixed(5)}`;
+    document.getElementById('locText').textContent = locText;
+    window._lastLat = lat;
+    window._lastLng = lng;
+    window._lastLocText = locText;
+  }, (err)=>{
+    document.getElementById('locText').textContent = 'Location denied or error';
+  }, { enableHighAccuracy: true, maximumAge: 60000, timeout: 10000 });
+}
+
+// poll periodically to refresh location
+setInterval(()=>{ if(document.getElementById('attBox').style.display !== 'none') detectLocation(); }, 60000);
+
+// ----- helper: post JSON to Apps Script -----
+async function postJson(obj){
+  try{
+    const r = await fetch(WEB_APP_URL, {
+  method: 'POST',
+  mode: 'no-cors',        // <— fix: browser skips CORS check
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ action: 'attendance', payload: payload })
+})
+.then(() => {
+  alert('✅ Attendance marked (check your Sheet/Drive)');
+})
+.catch(err => {
+  console.error('❌ Fetch error', err);
+  alert('❌ Could not reach server');
+});
+  }}
+</script>
 </body>
 </html>
-
