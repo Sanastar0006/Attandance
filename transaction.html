@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transaction Entry</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #001f3f, #004080, #0074D9);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(6px);
+      text-align: center;
+      padding: 15px;
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 30px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 25px;
+      width: 100%;
+      max-width: 800px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      backdrop-filter: blur(8px);
+    }
+    h2 {
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: 600;
+      border-bottom: 2px solid rgba(255,255,255,0.2);
+      padding-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 500;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: none;
+      border-radius: 6px;
+      outline: none;
+      background: rgba(255,255,255,0.9);
+      color: #333;
+    }
+    button {
+      margin-top: 25px;
+      padding: 12px 25px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      background: #00b894;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #009e7a;
+    }
+    .row {
+      display: flex;
+      gap: 20px;
+    }
+    .row > div {
+      flex: 1;
+    }
+    table {
+      width: 100%;
+      margin-top: 15px;
+      border-collapse: collapse;
+      background: rgba(255,255,255,0.9);
+      color: #333;
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: #0074D9;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <i class="fa-solid fa-coins"></i> Transaction Entry Portal
+  </header>
+
+  <main>
+    <div class="card">
+      <h2><i class="fa-solid fa-file-invoice-dollar"></i> New Transaction</h2>
+      
+      <div class="row">
+        <div>
+          <label>Date</label>
+          <input type="date" id="date" />
+        </div>
+        <div>
+          <label>Transaction Type</label>
+          <select id="transaction">
+            <option value="">Select</option>
+            <option>Income</option>
+            <option>Expense</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Head</label>
+      <input type="text" id="head" placeholder="Enter head name" />
+
+      <label>Mode</label>
+      <select id="mode" onchange="toggleDenomination()">
+        <option value="">Select</option>
+        <option>Cash</option>
+        <option>Bank</option>
+      </select>
+
+      <div id="bankFields" style="display:none;">
+        <label>Bank Name</label>
+        <input type="text" id="bankName" placeholder="Bank Name" />
+        <label>Account No</label>
+        <input type="text" id="accNo" placeholder="Account Number" />
+        <label>IFSC Code</label>
+        <input type="text" id="ifsc" placeholder="IFSC Code" />
+      </div>
+
+      <label>Amount</label>
+      <input type="number" id="amount" placeholder="Enter amount" />
+
+      <label>Description</label>
+      <textarea id="desc" rows="3" placeholder="Enter details..."></textarea>
+
+      <div id="denominationCard" style="display:none;">
+        <h3>Denomination Details</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Value</th>
+              <th>Nos</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="denominationBody"></tbody>
+        </table>
+      </div>
+
+      <button onclick="saveTransaction()">
+        <i class="fa-solid fa-paper-plane"></i> Save Transaction
+      </button>
+
+      <p id="msg" style="text-align:center;margin-top:15px;font-weight:600;"></p>
+    </div>
+  </main>
+
+  <script>
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3YVkJQ2KnyyOZs2I-kUlDGxnU-3Hd_vDkkrV5pJdCL3a4hSw5FaOSNe7IupgYA2sm/exec";
+
+    const denominationValues = [2000, 500, 200, 100, 50, 20, 10];
+    const denomBody = document.getElementById("denominationBody");
+
+    denominationValues.forEach(v => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${v}</td>
+        <td><input type="number" min="0" value="0" data-value="${v}" onchange="calcTotal(this)"></td>
+        <td class="total">0</td>
+      `;
+      denomBody.appendChild(tr);
+    });
+
+    function toggleDenomination() {
+      const mode = document.getElementById("mode").value;
+      document.getElementById("denominationCard").style.display = mode === "Cash" ? "block" : "none";
+      document.getElementById("bankFields").style.display = mode === "Bank" ? "block" : "none";
+    }
+
+    function calcTotal(input) {
+      const val = Number(input.dataset.value);
+      const nos = Number(input.value);
+      input.closest("tr").querySelector(".total").innerText = val * nos;
+    }
+
+    async function saveTransaction() {
+      const data = {
+        action: "saveTransaction",
+        date: document.getElementById("date").value,
+        transaction: document.getElementById("transaction").value,
+        head: document.getElementById("head").value,
+        mode: document.getElementById("mode").value,
+        bankName: document.getElementById("bankName").value,
+        accNo: document.getElementById("accNo").value,
+        ifsc: document.getElementById("ifsc").value,
+        amount: document.getElementById("amount").value,
+        desc: document.getElementById("desc").value,
+        denomination: Array.from(document.querySelectorAll("#denominationBody tr")).map(row => ({
+          value: Number(row.children[0].innerText),
+          nos: Number(row.children[1].querySelector("input").value)
+        }))
+      };
+
+      document.getElementById("msg").innerText = "Saving...";
+      try {
+        const res = await fetch(GAS_WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify(data)
+        });
+        const text = await res.text();
+        document.getElementById("msg").innerText = text;
+      } catch (err) {
+        document.getElementById("msg").innerText = "Error: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
