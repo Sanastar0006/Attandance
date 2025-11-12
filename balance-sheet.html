@@ -1,139 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Balance Sheet</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-  body {
-    font-family: "Poppins", sans-serif;
-    background: radial-gradient(circle at top left,#0a1b3c 0%,#0e224d 60%,#071022 100%);
-    color:#fff;
-    margin:0;
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-  .card {
-    background: rgba(255,255,255,0.08);
-    border:1px solid rgba(255,255,255,0.15);
-    border-radius:20px;
-    box-shadow:0 4px 30px rgba(0,0,0,0.4);
-    backdrop-filter: blur(10px);
-    width:90%;
-    max-width:900px;
-    padding:2rem;
-    animation: fadeIn 0.8s ease;
-  }
-  @keyframes fadeIn {from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
-  h1 {
-    text-align:center;
-    margin-bottom:1rem;
-    color:#ffd700;
-  }
-  table {
-    width:100%;
-    border-collapse:collapse;
-    text-align:center;
-    color:#fff;
-    margin-top:1rem;
-  }
-  th,td {
-    border-bottom:1px solid rgba(255,255,255,0.15);
-    padding:10px;
-  }
-  th {
-    color:#ffb700;
-    font-weight:600;
-  }
-  .summary {
-    display:flex;
-    justify-content:space-around;
-    margin-top:1.5rem;
-    font-size:1.1rem;
-    background:rgba(255,255,255,0.1);
-    border-radius:12px;
-    padding:1rem;
-  }
-  button {
-    background:linear-gradient(45deg,#ffb700,#ff8c00);
-    border:none;
-    border-radius:10px;
-    color:#000;
-    font-weight:600;
-    padding:0.6rem 1.2rem;
-    cursor:pointer;
-    margin-top:10px;
-  }
-  button:hover {filter:brightness(1.1);}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Balance Sheet</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #0d47a1;
+      color: white;
+      padding: 18px 20px;
+      text-align: center;
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 25px;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #e3f2fd;
+      color: #0d47a1;
+      font-size: 17px;
+    }
+    td {
+      font-size: 16px;
+      color: #333;
+    }
+    .section-title {
+      font-weight: bold;
+      color: #0d47a1;
+      margin-top: 20px;
+      font-size: 18px;
+      border-left: 4px solid #0d47a1;
+      padding-left: 10px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #555;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
+  <header><i class="fa-solid fa-scale-balanced"></i> Balance Sheet</header>
+  <div class="container">
+    <div class="section-title">ASSETS</div>
+    <table id="assetsTable">
+      <thead>
+        <tr><th>Current Assets</th><th>Amount</th><th>Current Liabilities</th><th>Amount</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
 
-<div class="card">
-  <h1><i class="fa-solid fa-scale-balanced"></i> Balance Sheet</h1>
+    <div class="section-title">EQUITY</div>
+    <table id="equityTable">
+      <thead><tr><th>Particulars</th><th>Amount</th></tr></thead>
+      <tbody></tbody>
+    </table>
 
-  <div style="text-align:center;">
-    <button onclick="loadData()">🔄 Refresh Data</button>
+    <div class="section-title">TOTAL</div>
+    <table>
+      <tbody id="totalTable"></tbody>
+    </table>
   </div>
+  <div class="footer">© 2025 Finance Dashboard</div>
 
-  <div class="summary">
-    <div>💸 Total Debit: <b><span id="totalDebit">0</span></b></div>
-    <div>💰 Total Credit: <b><span id="totalCredit">0</span></b></div>
-  </div>
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3YVkJQ2KnyyOZs2I-kUlDGxnU-3Hd_vDkkrV5pJdCL3a4hSw5FaOSNe7IupgYA2sm/exec";
 
-  <table id="balanceTable">
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Particulars</th>
-        <th>Debit</th>
-        <th>Credit</th>
-        <th>Remarks</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    async function loadBalanceSheet() {
+      try {
+        const res = await fetch(SCRIPT_URL + "?sheet=Balance%20Sheet");
+        const data = await res.json();
 
-  <p id="msg" style="text-align:center;color:#ffd700;margin-top:10px;"></p>
-</div>
+        const assetsTbody = document.querySelector("#assetsTable tbody");
+        const equityTbody = document.querySelector("#equityTable tbody");
+        const totalTbody = document.querySelector("#totalTable");
 
-<script>
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3YVkJQ2KnyyOZs2I-kUlDGxnU-3Hd_vDkkrV5pJdCL3a4hSw5FaOSNe7IupgYA2sm/exec";
+        assetsTbody.innerHTML = "";
+        equityTbody.innerHTML = "";
+        totalTbody.innerHTML = "";
 
-async function loadData(){
-  document.getElementById("msg").innerText="Loading...";
-  try{
-    const res = await fetch(GAS_WEB_APP_URL + "?action=getBalanceSheet");
-    const data = await res.json();
-    const tbody = document.querySelector("#balanceTable tbody");
-    tbody.innerHTML="";
-    let totalDebit=0,totalCredit=0;
-    data.forEach(row=>{
-      const tr=document.createElement("tr");
-      tr.innerHTML=`
-        <td>${row.date||""}</td>
-        <td>${row.particulars||""}</td>
-        <td>${row.debit||""}</td>
-        <td>${row.credit||""}</td>
-        <td>${row.remarks||""}</td>`;
-      tbody.appendChild(tr);
-      totalDebit += Number(row.debit||0);
-      totalCredit += Number(row.credit||0);
-    });
-    document.getElementById("totalDebit").innerText=totalDebit.toLocaleString();
-    document.getElementById("totalCredit").innerText=totalCredit.toLocaleString();
-    document.getElementById("msg").innerText="✅ Loaded Successfully";
-  }catch(err){
-    document.getElementById("msg").innerText="❌ Error loading data";
-  }
-}
+        data.assets.forEach((row, i) => {
+          const liab = data.liabilities[i] || ["", ""];
+          assetsTbody.innerHTML += `<tr>
+            <td>${row[0]}</td><td>${row[1]}</td>
+            <td>${liab[0]}</td><td>${liab[1]}</td>
+          </tr>`;
+        });
 
-// Auto load on open
-loadData();
-</script>
+        data.equity.forEach(row => {
+          equityTbody.innerHTML += `<tr><td>${row[0]}</td><td>${row[1]}</td></tr>`;
+        });
 
+        totalTbody.innerHTML = `
+          <tr><td><b>Total Assets</b></td><td>${data.totalAssets}</td><td><b>Total Liabilities</b></td><td>${data.totalLiabilities}</td></tr>
+          <tr><td><b>Total Equity</b></td><td>${data.totalEquity}</td><td><b>Total Liab. + Equity</b></td><td>${data.totalLiabEquity}</td></tr>
+        `;
+      } catch (err) {
+        console.error("Error fetching sheet:", err);
+      }
+    }
+
+    loadBalanceSheet();
+  </script>
 </body>
 </html>
