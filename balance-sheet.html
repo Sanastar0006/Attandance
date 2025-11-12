@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Balance Sheet</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: radial-gradient(circle at top left,#0a1b3c 0%,#0e224d 60%,#071022 100%);
+    color:#fff;
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .card {
+    background: rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:20px;
+    box-shadow:0 4px 30px rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    width:90%;
+    max-width:900px;
+    padding:2rem;
+    animation: fadeIn 0.8s ease;
+  }
+  @keyframes fadeIn {from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+  h1 {
+    text-align:center;
+    margin-bottom:1rem;
+    color:#ffd700;
+  }
+  table {
+    width:100%;
+    border-collapse:collapse;
+    text-align:center;
+    color:#fff;
+    margin-top:1rem;
+  }
+  th,td {
+    border-bottom:1px solid rgba(255,255,255,0.15);
+    padding:10px;
+  }
+  th {
+    color:#ffb700;
+    font-weight:600;
+  }
+  .summary {
+    display:flex;
+    justify-content:space-around;
+    margin-top:1.5rem;
+    font-size:1.1rem;
+    background:rgba(255,255,255,0.1);
+    border-radius:12px;
+    padding:1rem;
+  }
+  button {
+    background:linear-gradient(45deg,#ffb700,#ff8c00);
+    border:none;
+    border-radius:10px;
+    color:#000;
+    font-weight:600;
+    padding:0.6rem 1.2rem;
+    cursor:pointer;
+    margin-top:10px;
+  }
+  button:hover {filter:brightness(1.1);}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1><i class="fa-solid fa-scale-balanced"></i> Balance Sheet</h1>
+
+  <div style="text-align:center;">
+    <button onclick="loadData()">🔄 Refresh Data</button>
+  </div>
+
+  <div class="summary">
+    <div>💸 Total Debit: <b><span id="totalDebit">0</span></b></div>
+    <div>💰 Total Credit: <b><span id="totalCredit">0</span></b></div>
+  </div>
+
+  <table id="balanceTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Particulars</th>
+        <th>Debit</th>
+        <th>Credit</th>
+        <th>Remarks</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <p id="msg" style="text-align:center;color:#ffd700;margin-top:10px;"></p>
+</div>
+
+<script>
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3YVkJQ2KnyyOZs2I-kUlDGxnU-3Hd_vDkkrV5pJdCL3a4hSw5FaOSNe7IupgYA2sm/exec";
+
+async function loadData(){
+  document.getElementById("msg").innerText="Loading...";
+  try{
+    const res = await fetch(GAS_WEB_APP_URL + "?action=getBalanceSheet");
+    const data = await res.json();
+    const tbody = document.querySelector("#balanceTable tbody");
+    tbody.innerHTML="";
+    let totalDebit=0,totalCredit=0;
+    data.forEach(row=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td>${row.date||""}</td>
+        <td>${row.particulars||""}</td>
+        <td>${row.debit||""}</td>
+        <td>${row.credit||""}</td>
+        <td>${row.remarks||""}</td>`;
+      tbody.appendChild(tr);
+      totalDebit += Number(row.debit||0);
+      totalCredit += Number(row.credit||0);
+    });
+    document.getElementById("totalDebit").innerText=totalDebit.toLocaleString();
+    document.getElementById("totalCredit").innerText=totalCredit.toLocaleString();
+    document.getElementById("msg").innerText="✅ Loaded Successfully";
+  }catch(err){
+    document.getElementById("msg").innerText="❌ Error loading data";
+  }
+}
+
+// Auto load on open
+loadData();
+</script>
+
+</body>
+</html>
