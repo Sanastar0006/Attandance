@@ -27,7 +27,7 @@
     padding:2rem;
     animation: fadeIn 0.8s ease;
   }
-  @keyframes fadeIn {from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);}}
+  @keyframes fadeIn {from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
   h1 {text-align:center; margin-bottom:1rem; color:#ffd700;}
   input,select,textarea {
     width:100%;
@@ -137,17 +137,17 @@ const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx7qtjwNAkIuCHE
 function login(){
   const u=document.getElementById("user").value.trim();
   const p=document.getElementById("pass").value.trim();
-  fetch(GAS_WEB_APP_URL+"?action=login&username="+encodeURIComponent(u)+"&password="+encodeURIComponent(p))
+  fetch(GAS_WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"login",username:u,password:p})})
   .then(r=>r.text())
-  .then(txt=>{
-    if(txt.trim()=="success"){
+  .then(res=>{
+    if(res.trim()=="success"){
       document.getElementById("login-card").classList.add("hidden");
       document.getElementById("portal-card").classList.remove("hidden");
-    } else {
+    }else{
       document.getElementById("login-msg").innerText="Invalid login!";
     }
   })
-  .catch(()=>document.getElementById("login-msg").innerText="Connection error");
+  .catch(()=>document.getElementById("login-msg").innerText="Connection error!");
 }
 
 // Tabs
@@ -224,7 +224,7 @@ function saveData(){
   const data={
     action:"saveTransaction",
     date:document.getElementById("date").value,
-    head:document.getElementById("accountHead").value,
+    accountHead:document.getElementById("accountHead").value,
     transaction:document.getElementById("transaction").value,
     mode:document.querySelector('input[name="paymode"]:checked')?.value||"",
     amount:document.getElementById("amount").value,
