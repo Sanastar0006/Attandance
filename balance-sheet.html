@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Balance Sheet</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body {
-      font-family: 'Poppins', sans-serif;
+      font-family: "Poppins", sans-serif;
       background: linear-gradient(135deg, #e3f2fd, #bbdefb);
       margin: 0;
       padding: 0;
     }
     header {
-      background-color: #0d47a1;
+      background: #0d47a1;
       color: #fff;
       text-align: center;
-      padding: 18px;
+      padding: 20px;
       font-size: 26px;
       font-weight: 600;
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
@@ -26,32 +26,34 @@
       background: #fff;
       margin: 40px auto;
       border-radius: 16px;
-      padding: 30px;
+      padding: 30px 40px;
       box-shadow: 0 6px 15px rgba(0,0,0,0.15);
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 25px;
     }
     th, td {
       text-align: left;
-      padding: 10px 12px;
-      border-bottom: 1px solid #ddd;
+      padding: 10px;
       font-size: 16px;
     }
     th {
-      background-color: #e3f2fd;
       color: #0d47a1;
-      font-size: 17px;
+      border-bottom: 2px solid #90caf9;
+    }
+    td.amount {
+      text-align: right;
+      font-weight: 500;
+      color: #333;
     }
     .section-title {
-      font-weight: bold;
       color: #0d47a1;
-      font-size: 20px;
-      margin-top: 30px;
+      font-weight: 600;
+      font-size: 18px;
+      margin-top: 25px;
       border-left: 4px solid #0d47a1;
-      padding-left: 10px;
+      padding-left: 8px;
     }
     .footer {
       text-align: center;
@@ -66,22 +68,37 @@
 
   <div class="container">
     <div class="section-title">ASSETS / LIABILITIES</div>
-    <table id="balTable">
-      <thead>
-        <tr>
-          <th>ASSETS</th><th>Amount</th>
-          <th>LIABILITIES</th><th>Amount</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
+    <table>
+      <tr>
+        <th>ASSETS</th>
+        <th>Amount</th>
+        <th>LIABILITIES</th>
+        <th>Amount</th>
+      </tr>
+      <tr>
+        <td>Cash & Bank</td><td class="amount" id="cashBank"></td>
+        <td>Payables</td><td class="amount" id="payables"></td>
+      </tr>
+      <tr>
+        <td>Receivables</td><td class="amount" id="receivables"></td>
+        <td>Loan Payable</td><td class="amount" id="loanPayable"></td>
+      </tr>
+      <tr>
+        <td>Loan Given</td><td class="amount" id="loanGiven"></td>
+        <td></td><td></td>
+      </tr>
+      <tr>
+        <td>Total Assets</td><td class="amount" id="totalAssets"></td>
+        <td>Total Liabilities</td><td class="amount" id="totalLiabilities"></td>
+      </tr>
     </table>
 
     <div class="section-title">EQUITY</div>
-    <table id="equityTable">
-      <thead>
-        <tr><th>Particulars</th><th>Amount</th></tr>
-      </thead>
-      <tbody></tbody>
+    <table>
+      <tr><td>Capital</td><td class="amount" id="capital"></td></tr>
+      <tr><td>Retained Earnings</td><td class="amount" id="retainedEarnings"></td></tr>
+      <tr><td>Total Equity</td><td class="amount" id="totalEquity"></td></tr>
+      <tr><td><b>TOTAL LIAB. + EQUITY</b></td><td class="amount" id="totalLE"></td></tr>
     </table>
   </div>
 
@@ -92,34 +109,24 @@
 
     async function loadBalanceSheet() {
       try {
-        const response = await fetch(SCRIPT_URL + "?sheet=Balance%20sheet");
-        const data = await response.json();
+        const res = await fetch(SCRIPT_URL + "?action=getBalanceSheet");
+        const data = await res.json();
 
-        const tbody = document.querySelector("#balTable tbody");
-        const eqBody = document.querySelector("#equityTable tbody");
-
-        tbody.innerHTML = "";
-        eqBody.innerHTML = "";
-
-        // first part: ASSETS & LIABILITIES
-        const maxRows = Math.max(data.assets.length, data.liabilities.length);
-        for (let i = 0; i < maxRows; i++) {
-          const asset = data.assets[i] || ["", ""];
-          const liab = data.liabilities[i] || ["", ""];
-          tbody.innerHTML += `
-            <tr>
-              <td>${asset[0] || ""}</td><td>${asset[1] || ""}</td>
-              <td>${liab[0] || ""}</td><td>${liab[1] || ""}</td>
-            </tr>`;
-        }
-
-        // second part: EQUITY
-        data.equity.forEach(row => {
-          eqBody.innerHTML += `<tr><td>${row[0]}</td><td>${row[1]}</td></tr>`;
-        });
+        // Update values in table
+        document.getElementById("cashBank").textContent = data.cashBank;
+        document.getElementById("receivables").textContent = data.receivables;
+        document.getElementById("loanGiven").textContent = data.loanGiven;
+        document.getElementById("totalAssets").textContent = data.totalAssets;
+        document.getElementById("payables").textContent = data.payables;
+        document.getElementById("loanPayable").textContent = data.loanPayable;
+        document.getElementById("totalLiabilities").textContent = data.totalLiabilities;
+        document.getElementById("capital").textContent = data.capital;
+        document.getElementById("retainedEarnings").textContent = data.retainedEarnings;
+        document.getElementById("totalEquity").textContent = data.totalEquity;
+        document.getElementById("totalLE").textContent = data.totalLE;
 
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error("Error fetching balance sheet:", err);
       }
     }
 
