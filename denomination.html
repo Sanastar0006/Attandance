@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Denomination Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: radial-gradient(circle at top left,#0a1b3c 0%,#0e224d 60%,#071022 100%);
+    color:#fff;
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .card {
+    background: rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:20px;
+    box-shadow:0 4px 30px rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    width:90%;
+    max-width:600px;
+    padding:2rem;
+    animation: fadeIn 0.8s ease;
+  }
+  @keyframes fadeIn {from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+  h1 {text-align:center; margin-bottom:1rem; color:#ffd700;}
+  input,select {
+    width:100%;
+    padding:0.6rem 0.8rem;
+    margin-top:0.3rem;
+    border:none;
+    border-radius:8px;
+    outline:none;
+    background:#fff;
+    color:#000;
+  }
+  button {
+    margin-top:1rem;
+    padding:0.6rem 1.2rem;
+    border:none;
+    border-radius:10px;
+    font-weight:600;
+    background:linear-gradient(45deg,#ffb700,#ff8c00);
+    cursor:pointer;
+    color:#000;
+  }
+  button:hover {filter:brightness(1.1);}
+  table {width:100%;text-align:center;color:#fff;border-collapse:collapse;}
+  th,td {padding:8px;}
+  th {color:#ffd700;}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1><i class="fa-solid fa-coins"></i> Denomination Portal</h1>
+
+  <label>Date</label>
+  <input type="date" id="date">
+
+  <label>Account Head</label>
+  <select id="head">
+    <option value="">Select</option>
+    <option>Receipt</option>
+    <option>Payment</option>
+    <option>Journal</option>
+    <option>Contra</option>
+  </select>
+
+  <h3>Cash Denomination</h3>
+  <table>
+    <tr><th>Value</th><th>Nos</th><th>Amount</th></tr>
+    <tbody id="denoRows"></tbody>
+  </table>
+
+  <p>Total Amount: <b><span id="totalAmt">0</span></b></p>
+
+  <button onclick="saveDenomination()">Save Denomination</button>
+  <p id="msg"></p>
+</div>
+
+<script>
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3YVkJQ2KnyyOZs2I-kUlDGxnU-3Hd_vDkkrV5pJdCL3a4hSw5FaOSNe7IupgYA2sm/exec";
+
+// Setup denomination rows
+const values=[2000,500,200,100,50,20,10,5,2,1];
+const tbody=document.getElementById("denoRows");
+values.forEach(v=>{
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td>${v}</td>
+    <td><input type="number" min="0" id="nos${v}" style="width:70px;text-align:center" onchange="calcTotal()"></td>
+    <td id="amt${v}">0</td>`;
+  tbody.appendChild(tr);
+});
+
+function calcTotal(){
+  let tot=0;
+  values.forEach(v=>{
+    const nos=Number(document.getElementById("nos"+v).value||0);
+    const amt=v*nos;
+    document.getElementById("amt"+v).innerText=amt;
+    tot+=amt;
+  });
+  document.getElementById("totalAmt").innerText=tot;
+}
+
+function saveDenomination(){
+  const data={
+    action:"saveTransaction", // same function used for saving
+    date:document.getElementById("date").value,
+    head:document.getElementById("head").value,
+    mode:"Cash",
+    denomination: values.map(v=>({
+      value:v,
+      nos:Number(document.getElementById("nos"+v).value||0)
+    }))
+  };
+  fetch(GAS_WEB_APP_URL,{
+    method:"POST",
+    body:JSON.stringify(data)
+  })
+  .then(r=>r.text())
+  .then(res=>{
+    document.getElementById("msg").innerText=res;
+    if(res.includes("Saved")) clearForm();
+  })
+  .catch(()=>document.getElementById("msg").innerText="Error saving!");
+}
+
+function clearForm(){
+  document.querySelectorAll("input[type='number']").forEach(e=>e.value="");
+  document.getElementById("totalAmt").innerText="0";
+  document.getElementById("date").value="";
+  document.getElementById("head").value="";
+}
+</script>
+
+</body>
+</html>
