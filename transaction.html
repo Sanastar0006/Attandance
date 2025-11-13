@@ -183,6 +183,7 @@
     const denominationValues = [2000, 500, 200, 100, 50, 20, 10];
     const denomBody = document.getElementById("denominationBody");
 
+    // Create denomination rows
     denominationValues.forEach(v => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -206,6 +207,8 @@
     }
 
     async function saveTransaction() {
+      const msg = document.getElementById("msg");
+
       const data = {
         action: "saveTransaction",
         date: document.getElementById("date").value,
@@ -223,33 +226,21 @@
         }))
       };
 
-      document.getElementById("msg").innerText = "Saving...";
+      msg.innerText = "Saving...";
+
       try {
         const res = await fetch(GAS_WEB_APP_URL, {
-  method: "POST",
-  body: JSON.stringify({
-    action: "saveTransaction",
-    date: dateValue,
-    transaction: transactionType,
-    head: headValue,
-    mode: modeValue,
-    amount: amountValue,
-    bankName: bankValue,
-    accNo: accNoValue,
-    ifsc: ifscValue,
-    desc: descValue,
-    denomination: denominationArray
-  }),
-});
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
         const text = await res.text();
-        document.getElementById("msg").innerText = text;
+        msg.innerText = text.includes("Success") ? "✅ Transaction Saved!" : text;
       } catch (err) {
-        document.getElementById("msg").innerText = "Error: " + err.message;
+        msg.innerText = "❌ Error: " + err.message;
       }
     }
   </script>
 </body>
 </html>
-
-
-
