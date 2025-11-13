@@ -114,7 +114,7 @@
   <main>
     <div class="card">
       <h2><i class="fa-solid fa-file-invoice-dollar"></i> New Transaction</h2>
-      
+
       <div class="row">
         <div>
           <label>Date</label>
@@ -178,7 +178,7 @@
   </main>
 
   <script>
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxi6L1aoZsNVGelJWb_a29AGnIQjZfdEpqdF1uXGXuCsEYC7srxmNKU1DVebXTFIukA/exec";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwnol7lqw8673T-fcIgqMIV5p88c-wDYlMSyhHdrSzOfP59REPcQZv5dkm-OO7cBef1/exec";
 
     const denominationValues = [2000, 500, 200, 100, 50, 20, 10];
     const denomBody = document.getElementById("denominationBody");
@@ -229,6 +229,21 @@
           method: "POST",
           body: JSON.stringify(data)
         });
+  method: "POST",
+  body: JSON.stringify({
+    action: "saveTransaction",
+    date: dateValue,
+    transaction: transactionType,
+    head: headValue,
+    mode: modeValue,
+    amount: amountValue,
+    bankName: bankValue,
+    accNo: accNoValue,
+    ifsc: ifscValue,
+    desc: descValue,
+    denomination: denominationArray
+  }),
+});
         const text = await res.text();
         document.getElementById("msg").innerText = text;
       } catch (err) {
@@ -238,4 +253,3 @@
   </script>
 </body>
 </html>
-
