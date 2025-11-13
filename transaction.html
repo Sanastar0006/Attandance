@@ -178,12 +178,11 @@
   </main>
 
   <script>
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwnol7lqw8673T-fcIgqMIV5p88c-wDYlMSyhHdrSzOfP59REPcQZv5dkm-OO7cBef1/exec";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3YVkJQ2KnyyOZs2I-kUlDGxnU-3Hd_vDkkrV5pJdCL3a4hSw5FaOSNe7IupgYA2sm/exec";
 
     const denominationValues = [2000, 500, 200, 100, 50, 20, 10];
     const denomBody = document.getElementById("denominationBody");
 
-    // Create denomination rows
     denominationValues.forEach(v => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -206,7 +205,7 @@
       input.closest("tr").querySelector(".total").innerText = val * nos;
     }
 
-     async function saveTransaction() {
+    async function saveTransaction() {
       const data = {
         action: "saveTransaction",
         date: document.getElementById("date").value,
@@ -239,5 +238,3 @@
   </script>
 </body>
 </html>
-
-
